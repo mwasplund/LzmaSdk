@@ -1,0 +1,5 @@
+Name = "LzmaSdk"
+Version = "19.0.0"
+Public = "Module.cpp"
+Source = [
+]
