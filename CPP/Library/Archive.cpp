@@ -16,11 +16,25 @@ module;
 #include "../7zip/Archive/7z/7zHandler.h"
 
 #include "ArchiveUpdateCallback.h"
+#include "Helpers.h"
 
 module LzmaSdk;
 
 namespace LzmaSdk
 {
+    void SetCompressionProperties(ISetProperties& properties)
+    {
+        const size_t numProps = 1;
+        const wchar_t* names[numProps] = { L"x" };
+        NWindows::NCOM::CPropVariant values[numProps] =
+        {
+            static_cast<UInt32>(2),
+        };
+
+        ThrowIfFailed(
+            properties.SetProperties(names, values, numProps));
+    }
+
     Archive::Archive(const std::string& name) :
         _name(name),
         _files()
@@ -28,6 +42,7 @@ namespace LzmaSdk
         // Use the symbols to force resolve with linker
         g_ForceLZMA2Import = 0;
         g_ForceLZMAImport = 0;
+        g_ForceCrcImport = 0;
     }
 
     void Archive::AddFile(const std::string& file)
@@ -71,29 +86,27 @@ namespace LzmaSdk
         std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
         std::wstring wideArchiveName = converter.from_bytes(_name);
 
-        auto outFileStream = std::make_shared<COutFileStream>();
+        auto outFileStream = new COutFileStream();
+        CMyComPtr<COutFileStream> outFileStreamLoc(outFileStream);
         if (!outFileStream->Create(wideArchiveName.c_str(), false))
         {
             throw std::runtime_error("Can't create archive file");
         }
 
-        auto outArchive = std::make_shared<NArchive::N7z::CHandler>();
+        auto outArchive = new NArchive::N7z::CHandler();
+        CMyComPtr<NArchive::N7z::CHandler> outArchiveLoc(outArchive);
+        SetCompressionProperties(*outArchive);
 
-        auto updateCallback = std::make_shared<ArchiveUpdateCallback>();
+        auto updateCallback = new ArchiveUpdateCallback();
+        CMyComPtr<ArchiveUpdateCallback> updateCallbackLoc(updateCallback);
         updateCallback->Init(&dirItems);
 
-        HRESULT result = outArchive->UpdateItems(
-            outFileStream.get(),
+        ThrowIfFailed(outArchive->UpdateItems(
+            outFileStream,
             dirItems.Size(),
-            updateCallback.get());
+            updateCallback));
 
         updateCallback->Finilize();
-
-        if (result != S_OK)
-        {
-            throw std::runtime_error("Update Error");
-        }
-
         if (updateCallback->FailedFiles.Size() != 0)
         {
             throw std::runtime_error("Contains failed files");

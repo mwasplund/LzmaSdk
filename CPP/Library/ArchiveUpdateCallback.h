@@ -12,7 +12,10 @@ namespace LzmaSdk
         FString FullPath;
         UInt32 Attrib;
 
-        bool isDir() const { return (Attrib & FILE_ATTRIBUTE_DIRECTORY) != 0 ; }
+        bool isDir() const
+        {
+            return (Attrib & FILE_ATTRIBUTE_DIRECTORY) != 0;
+        }
     };
 
     class ArchiveUpdateCallback :
@@ -62,13 +65,27 @@ namespace LzmaSdk
                 const DirectoryItem &dirItem = (*DirItems)[index];
                 switch (propID)
                 {
-                    case kpidPath:  prop = dirItem.Name; break;
-                    case kpidIsDir:  prop = dirItem.isDir(); break;
-                    case kpidSize:  prop = dirItem.Size; break;
-                    case kpidAttrib:  prop = dirItem.Attrib; break;
-                    case kpidCTime:  prop = dirItem.CTime; break;
-                    case kpidATime:  prop = dirItem.ATime; break;
-                    case kpidMTime:  prop = dirItem.MTime; break;
+                    case kpidPath:
+                        prop = dirItem.Name;
+                        break;
+                    case kpidIsDir:
+                        prop = dirItem.isDir();
+                        break;
+                    case kpidSize:
+                        prop = dirItem.Size;
+                        break;
+                    case kpidAttrib:
+                        prop = dirItem.Attrib;
+                        break;
+                    case kpidCTime:
+                        prop = dirItem.CTime;
+                        break;
+                    case kpidATime:
+                        prop = dirItem.ATime;
+                        break;
+                    case kpidMTime:
+                        prop = dirItem.MTime;
+                        break;
                 }
             }
 
