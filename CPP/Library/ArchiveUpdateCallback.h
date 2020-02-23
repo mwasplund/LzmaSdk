@@ -1,29 +1,8 @@
-module;
-
-#include <codecvt>
-#include <locale>
-#include <memory>
-#include <string>
-#include <vector>
-
-#include "Common/Common.h"
-#include "Common/MyInitGuid.h"
-#include "Common/IntToString.h"
-#include "Common/StringConvert.h"
-#include "Windows/FileFind.h"
-#include "Windows/NtCheck.h"
-#include "7zip/Common/FileStreams.h"
-#include "7zip/Archive/7z/7zHandler.h"
-
-// Hack around Static Library fun to force register the LZMA2 Encoder/Decoder
-extern int g_ForceLZMA2Import;
-extern int g_ForceLZMAImport;
-
-export module LzmaSdk;
+#pragma once
 
 namespace LzmaSdk
 {
-    struct CDirItem
+    struct DirectoryItem
     {
         UInt64 Size;
         FILETIME CTime;
@@ -36,7 +15,7 @@ namespace LzmaSdk
         bool isDir() const { return (Attrib & FILE_ATTRIBUTE_DIRECTORY) != 0 ; }
     };
 
-    class CArchiveUpdateCallback :
+    class ArchiveUpdateCallback :
         public IArchiveUpdateCallback2,
         public ICryptoGetTextPassword2,
         public CMyUnknownImp
@@ -80,7 +59,7 @@ namespace LzmaSdk
             }
 
             {
-                const CDirItem &dirItem = (*DirItems)[index];
+                const DirectoryItem &dirItem = (*DirItems)[index];
                 switch (propID)
                 {
                     case kpidPath:  prop = dirItem.Name; break;
@@ -101,7 +80,7 @@ namespace LzmaSdk
         {
             RINOK(Finilize());
 
-            const CDirItem &dirItem = (*DirItems)[index];
+            const DirectoryItem &dirItem = (*DirItems)[index];
 
             if (dirItem.isDir())
                 return S_OK;
@@ -182,7 +161,7 @@ namespace LzmaSdk
         UString VolExt;
 
         FString DirPrefix;
-        const CObjectVector<CDirItem> *DirItems;
+        const CObjectVector<DirectoryItem> *DirItems;
 
         bool PasswordIsDefined;
         UString Password;
@@ -193,9 +172,18 @@ namespace LzmaSdk
         FStringVector FailedFiles;
         CRecordVector<HRESULT> FailedCodes;
 
-        CArchiveUpdateCallback(): PasswordIsDefined(false), AskPassword(false), DirItems(0) {};
+        ArchiveUpdateCallback() :
+            PasswordIsDefined(false),
+            AskPassword(false),
+            DirItems(0)
+        {
+        };
 
-        ~CArchiveUpdateCallback() { Finilize(); }
+        ~ArchiveUpdateCallback()
+        {
+             Finilize();
+        }
+
         HRESULT Finilize()
         {
             if (m_NeedBeClosed)
@@ -206,7 +194,7 @@ namespace LzmaSdk
             return S_OK;
         }
 
-        void Init(const CObjectVector<CDirItem>* dirItems)
+        void Init(const CObjectVector<DirectoryItem>* dirItems)
         {
             DirItems = dirItems;
             m_NeedBeClosed = false;
@@ -214,67 +202,4 @@ namespace LzmaSdk
             FailedCodes.Clear();
         }
     };
-
-    export void CreateArchive(
-        const std::string& archiveName,
-        const std::vector<std::string>& files)
-    {
-        // Use the symbols to force resolve with linker
-        g_ForceLZMA2Import = 0;
-        g_ForceLZMAImport = 0;
-
-        CObjectVector<CDirItem> dirItems;
-        for (auto& file : files)
-        {
-            CDirItem di;
-            FString name = us2fs(GetUnicodeString(file.c_str()));
-
-            NWindows::NFile::NFind::CFileInfo fi;
-            if (!fi.Find(name))
-            {
-                throw std::runtime_error("Can't find file" + file);
-            }
-
-            di.Attrib = fi.Attrib;
-            di.Size = fi.Size;
-            di.CTime = fi.CTime;
-            di.ATime = fi.ATime;
-            di.MTime = fi.MTime;
-            di.Name = fs2us(name);
-            di.FullPath = name;
-            dirItems.Add(di);
-        }
-
-        // Convert the incoming file name to Utf16 since they like it that way
-        std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-        std::wstring wideArchiveName = converter.from_bytes(archiveName);
-
-        auto outFileStream = std::make_shared<COutFileStream>();
-        if (!outFileStream->Create(wideArchiveName.c_str(), false))
-        {
-            throw std::runtime_error("Can't create archive file");
-        }
-
-        auto outArchive = std::make_shared<NArchive::N7z::CHandler>();
-
-        auto updateCallback = std::make_shared<CArchiveUpdateCallback>();
-        updateCallback->Init(&dirItems);
-
-        HRESULT result = outArchive->UpdateItems(
-            outFileStream.get(),
-            dirItems.Size(),
-            updateCallback.get());
-
-        updateCallback->Finilize();
-
-        if (result != S_OK)
-        {
-            throw std::runtime_error("Update Error");
-        }
-
-        if (updateCallback->FailedFiles.Size() != 0)
-        {
-            throw std::runtime_error("Contains failed files");
-        }
-    }
 }
