@@ -10,6 +10,10 @@
 #include "Lzma2Encoder.h"
 #endif
 
+#ifdef SOUP_BUILD
+int g_ForceLZMA2Import = 0;
+#endif
+
 namespace NCompress {
 namespace NLzma2 {
 

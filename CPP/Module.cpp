@@ -15,6 +15,10 @@ module;
 #include "7zip/Common/FileStreams.h"
 #include "7zip/Archive/7z/7zHandler.h"
 
+// Hack around Static Library fun to force register the LZMA2 Encoder/Decoder
+extern int g_ForceLZMA2Import;
+extern int g_ForceLZMAImport;
+
 export module LzmaSdk;
 
 namespace LzmaSdk
@@ -215,6 +219,10 @@ namespace LzmaSdk
         const std::string& archiveName,
         const std::vector<std::string>& files)
     {
+        // Use the symbols to force resolve with linker
+        g_ForceLZMA2Import = 0;
+        g_ForceLZMAImport = 0;
+
         CObjectVector<CDirItem> dirItems;
         for (auto& file : files)
         {
