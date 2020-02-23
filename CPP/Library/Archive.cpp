@@ -3,6 +3,7 @@ module;
 #include <codecvt>
 #include <locale>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <vector>
 
@@ -14,6 +15,7 @@ module;
 #include "../Windows/NtCheck.h"
 #include "../7zip/Common/FileStreams.h"
 #include "../7zip/Archive/7z/7zHandler.h"
+#include "../../C/7zCrc.h"
 
 #include "ArchiveUpdateCallback.h"
 #include "Helpers.h"
@@ -42,7 +44,6 @@ namespace LzmaSdk
         // Use the symbols to force resolve with linker
         g_ForceLZMA2Import = 0;
         g_ForceLZMAImport = 0;
-        g_ForceCrcImport = 0;
     }
 
     void Archive::AddFile(const std::string& file)
@@ -100,6 +101,9 @@ namespace LzmaSdk
         auto updateCallback = new ArchiveUpdateCallback();
         CMyComPtr<ArchiveUpdateCallback> updateCallbackLoc(updateCallback);
         updateCallback->Init(&dirItems);
+
+        // Ensure that the runtime tables are setup
+        EnsureCrcInitialized();
 
         ThrowIfFailed(outArchive->UpdateItems(
             outFileStream,

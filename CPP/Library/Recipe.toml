@@ -55,7 +55,6 @@ Source = [
     "../7zip/Compress/LzmaDecoder.cpp",
     "../7zip/Compress/LzmaEncoder.cpp",
     "../7zip/Compress/LzmaRegister.cpp",
-    "../Common/CRC.cpp",
     "../Common/IntToString.cpp",
     "../Common/MyString.cpp",
     "../Common/StringConvert.cpp",
