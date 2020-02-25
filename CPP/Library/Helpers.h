@@ -2,8 +2,8 @@
 
 namespace LzmaSdk
 {
-    static bool g_crcInitialized = false;
-    static std::mutex g_crcInitialMutex;
+    bool g_crcInitialized = false;
+    std::mutex g_crcInitialMutex;
 
     inline void ThrowIfFailed(HRESULT result)
     {

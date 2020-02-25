@@ -2,10 +2,10 @@
 
 namespace LzmaSdk
 {
-    export class Archive
+    export class ArchiveWriter
     {
     public:
-        Archive(const std::string& archive);
+        ArchiveWriter(const std::string& archive);
 
         void AddFile(const std::string& file);
         void AddFiles(const std::vector<std::string>& files);

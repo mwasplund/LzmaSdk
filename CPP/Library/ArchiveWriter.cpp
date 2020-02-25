@@ -3,22 +3,17 @@ module;
 #include <codecvt>
 #include <locale>
 #include <memory>
-#include <mutex>
 #include <string>
 #include <vector>
 
 #include "../Common/Common.h"
-#include "../Common/MyInitGuid.h"
 #include "../Common/IntToString.h"
 #include "../Common/StringConvert.h"
 #include "../Windows/FileFind.h"
-#include "../Windows/NtCheck.h"
 #include "../7zip/Common/FileStreams.h"
 #include "../7zip/Archive/7z/7zHandler.h"
-#include "../../C/7zCrc.h"
 
 #include "ArchiveUpdateCallback.h"
-#include "Helpers.h"
 
 module LzmaSdk;
 
@@ -37,7 +32,7 @@ namespace LzmaSdk
             properties.SetProperties(names, values, numProps));
     }
 
-    Archive::Archive(const std::string& name) :
+    ArchiveWriter::ArchiveWriter(const std::string& name) :
         _name(name),
         _files()
     {
@@ -46,12 +41,12 @@ namespace LzmaSdk
         g_ForceLZMAImport = 0;
     }
 
-    void Archive::AddFile(const std::string& file)
+    void ArchiveWriter::AddFile(const std::string& file)
     {
         _files.push_back(file);
     }
 
-    void Archive::AddFiles(const std::vector<std::string>& files)
+    void ArchiveWriter::AddFiles(const std::vector<std::string>& files)
     {
         _files.insert(
             _files.end(),
@@ -59,7 +54,7 @@ namespace LzmaSdk
             files.end());
     }
 
-    void Archive::Save()
+    void ArchiveWriter::Save()
     {
         CObjectVector<DirectoryItem> dirItems;
         for (auto& file : _files)

@@ -2,7 +2,8 @@ Name = "LzmaSdk"
 Version = "19.0.0"
 Public = "Module.cpp"
 Source = [
-    "Archive.cpp",
+    "ArchiveReader.cpp",
+    "ArchiveWriter.cpp",
     "../../C/7zCrc.c",
     "../../C/7zCrcOpt.c",
     "../../C/Alloc.c",
