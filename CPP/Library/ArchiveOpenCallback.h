@@ -8,8 +8,7 @@ namespace LzmaSdk
         public CMyUnknownImp
     {
     public:
-        ArchiveOpenCallback() :
-            PasswordIsDefined(false)
+        ArchiveOpenCallback()
         {
         }
 
@@ -27,19 +26,7 @@ namespace LzmaSdk
 
         STDMETHOD(CryptoGetTextPassword)(BSTR *password)
         {
-            if (!PasswordIsDefined)
-            {
-                // You can ask real password here from user
-                // Password = GetPassword(OutStream);
-                // PasswordIsDefined = true;
-                // PrintError("Password is not defined");
-                return E_ABORT;
-            }
-
-            return StringToBstr(Password, password);
+            return StringToBstr(UString(), password);
         }
-
-        bool PasswordIsDefined;
-        UString Password;
     };
 }

@@ -17,36 +17,30 @@ module;
 #include "../7zip/Common/FileStreams.h"
 #include "../7zip/Archive/7z/7zHandler.h"
 
-#include "ArchiveExtractCallback.h"
-#include "ArchiveOpenCallback.h"
-
 module LzmaSdk;
+
+#include "ArchiveExtractCallbackWrapper.h"
+#include "ArchiveOpenCallback.h"
 
 namespace LzmaSdk
 {
-    ArchiveReader::ArchiveReader(const std::string& name) :
-        _name(name)
+    ArchiveReader::ArchiveReader(std::shared_ptr<IInStream> archive) :
+        _archive(std::move(archive))
     {
         // Use the symbols to force resolve with linker
         g_ForceLZMA2Import = 0;
         g_ForceLZMAImport = 0;
     }
 
-    void ArchiveReader::ExtractAll(const std::string& targetFolder)
+    void ArchiveReader::ExtractAll(
+        const std::string& targetFolder,
+        std::shared_ptr<IExtractCallback> callback)
     {
-        // Convert the incoming file name to Utf16 since they like it that way
-        std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-        std::wstring wideArchiveName = converter.from_bytes(_name);
-
         // Ensure that the runtime tables are setup
         EnsureCrcInitialized();
 
-        auto fileSpec = new CInFileStream();
-        CMyComPtr<IInStream> file = fileSpec;
-        if (!fileSpec->Open(wideArchiveName.c_str()))
-        {
-            throw std::runtime_error("Can't open archive file");
-        }
+        // Wrap the incoming stream so we can read it
+        CMyComPtr<::IInStream> file = new InStreamWrapper(_archive);
 
         // Creat the archive handler
         auto archive = new NArchive::N7z::CHandler();
@@ -54,18 +48,19 @@ namespace LzmaSdk
 
         // Open the archive
         auto openCallbackSpec = new ArchiveOpenCallback();
-        CMyComPtr<IArchiveOpenCallback> openCallback(openCallbackSpec);
-        openCallbackSpec->PasswordIsDefined = false;
+        CMyComPtr<::IArchiveOpenCallback> openCallback(openCallbackSpec);
 
         const UInt64 scanSize = 1 << 23;
         ThrowIfFailed(archive->Open(file, &scanSize, openCallback));
 
         // Extract into the target directory
-        auto extractCallbackSpec = new ArchiveExtractCallback();
-        CMyComPtr<IArchiveExtractCallback> extractCallback(extractCallbackSpec);
         FString targetFolderInternal = us2fs(GetUnicodeString(targetFolder.c_str()));
-        extractCallbackSpec->Init(archive, targetFolderInternal);
-        extractCallbackSpec->PasswordIsDefined = false;
+        NWindows::NFile::NName::NormalizeDirPathPrefix(targetFolderInternal);
+        auto extractCallbackSpec = new ArchiveExtractCallbackWrapper(
+            callback,
+            archive,
+            targetFolderInternal);
+        CMyComPtr<IArchiveExtractCallback> extractCallback(extractCallbackSpec);
 
         ThrowIfFailed(archive->Extract(
             nullptr,
@@ -73,7 +68,7 @@ namespace LzmaSdk
             false,
             extractCallback));
 
-        if (extractCallbackSpec->NumErrors > 0)
+        if (extractCallbackSpec->HasErrors())
         {
             throw std::runtime_error("Extract callback has errors");
         }

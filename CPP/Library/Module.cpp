@@ -1,6 +1,8 @@
 module;
 
+#include <ctime>
 #include <mutex>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -16,7 +18,12 @@ export module LzmaSdk;
 extern int g_ForceLZMA2Import;
 extern int g_ForceLZMAImport;
 
+#include "ICallback.h"
+#include "IStream.h"
+
 #include "ArchiveReader.h"
 #include "ArchiveWriter.h"
 
 #include "Helpers.h"
+#include "InStreamWrapper.h"
+#include "SequentialOutStreamWrapper.h"
