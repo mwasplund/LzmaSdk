@@ -15,8 +15,8 @@ module;
 export module LzmaSdk;
 
 // Hack around Static Library fun to force register the LZMA2 Encoder/Decoder
-extern int g_ForceLZMA2Import;
-extern int g_ForceLZMAImport;
+export extern int g_ForceLZMA2Import;
+export extern int g_ForceLZMAImport;
 
 #include "ICallback.h"
 #include "IStream.h"
