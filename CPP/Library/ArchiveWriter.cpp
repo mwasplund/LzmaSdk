@@ -13,9 +13,9 @@ module;
 #include "../7zip/Common/FileStreams.h"
 #include "../7zip/Archive/7z/7zHandler.h"
 
-#include "ArchiveUpdateCallback.h"
-
 module LzmaSdk;
+
+#include "ArchiveUpdateCallbackWrapper.h"
 
 namespace LzmaSdk
 {
@@ -32,8 +32,8 @@ namespace LzmaSdk
             properties.SetProperties(names, values, numProps));
     }
 
-    ArchiveWriter::ArchiveWriter(const std::string& name) :
-        _name(name),
+    ArchiveWriter::ArchiveWriter(std::shared_ptr<IOutStream> archive) :
+        _archive(std::move(archive)),
         _files()
     {
         // Use the symbols to force resolve with linker
@@ -54,61 +54,33 @@ namespace LzmaSdk
             files.end());
     }
 
-    void ArchiveWriter::Save()
+    void ArchiveWriter::Save(std::shared_ptr<IArchiveUpdateCallback> callback)
     {
-        CObjectVector<DirectoryItem> dirItems;
-        for (auto& file : _files)
-        {
-            DirectoryItem di;
-            FString name = us2fs(GetUnicodeString(file.c_str()));
-
-            NWindows::NFile::NFind::CFileInfo fi;
-            if (!fi.Find(name))
-            {
-                throw std::runtime_error("Can't find file" + file);
-            }
-
-            di.Attrib = fi.Attrib;
-            di.Size = fi.Size;
-            di.CTime = fi.CTime;
-            di.ATime = fi.ATime;
-            di.MTime = fi.MTime;
-            di.Name = fs2us(name);
-            di.FullPath = name;
-            dirItems.Add(di);
-        }
-
-        // Convert the incoming file name to Utf16 since they like it that way
-        std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-        std::wstring wideArchiveName = converter.from_bytes(_name);
-
-        auto outFileStream = new COutFileStream();
-        CMyComPtr<COutFileStream> outFileStreamLoc(outFileStream);
-        if (!outFileStream->Create(wideArchiveName.c_str(), false))
-        {
-            throw std::runtime_error("Can't create archive file");
-        }
+        // Wrap the incoming stream so we can read it
+        CMyComPtr<::IOutStream> outFileStream =
+            new OutStreamWrapper(_archive);
 
         auto outArchive = new NArchive::N7z::CHandler();
         CMyComPtr<NArchive::N7z::CHandler> outArchiveLoc(outArchive);
         SetCompressionProperties(*outArchive);
 
-        auto updateCallback = new ArchiveUpdateCallback();
-        CMyComPtr<ArchiveUpdateCallback> updateCallbackLoc(updateCallback);
-        updateCallback->Init(&dirItems);
+        CMyComPtr<ArchiveUpdateCallbackWrapper> updateCallback =
+            new ArchiveUpdateCallbackWrapper(callback);
+        updateCallback->Init(_files);
 
         // Ensure that the runtime tables are setup
         EnsureCrcInitialized();
 
         ThrowIfFailed(outArchive->UpdateItems(
             outFileStream,
-            dirItems.Size(),
+            _files.size(),
             updateCallback));
 
-        updateCallback->Finilize();
-        if (updateCallback->FailedFiles.Size() != 0)
+        if (updateCallback->HasErrors())
         {
             throw std::runtime_error("Contains failed files");
         }
+
+        callback->OnCompleted();
     }
 }

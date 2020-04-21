@@ -5,14 +5,14 @@ namespace LzmaSdk
     export class ArchiveWriter
     {
     public:
-        ArchiveWriter(const std::string& archive);
+        ArchiveWriter(std::shared_ptr<IOutStream> archive);
 
         void AddFile(const std::string& file);
         void AddFiles(const std::vector<std::string>& files);
-        void Save();
+        void Save(std::shared_ptr<IArchiveUpdateCallback> callback);
 
     private:
-        std::string _name;
+        std::shared_ptr<IOutStream> _archive;
         std::vector<std::string> _files;
     };
 }

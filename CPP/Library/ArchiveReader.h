@@ -8,11 +8,12 @@ namespace LzmaSdk
     export class ArchiveReader
     {
     public:
-        ArchiveReader(std::shared_ptr<IInStream> archive);
+        ArchiveReader(
+            std::shared_ptr<IInStream> archive);
 
         void ExtractAll(
             const std::string& targetFolder,
-            std::shared_ptr<IExtractCallback> callback);
+            std::shared_ptr<IArchiveExtractCallback> callback);
 
     private:
         std::shared_ptr<IInStream> _archive;

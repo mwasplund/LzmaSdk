@@ -9,7 +9,7 @@ namespace LzmaSdk
     {
     public:
         ArchiveExtractCallbackWrapper(
-            std::shared_ptr<LzmaSdk::IExtractCallback> callback,
+            std::shared_ptr<LzmaSdk::IArchiveExtractCallback> callback,
             IInArchive *archiveHandler,
             const FString &directoryPath) :
             _callback(std::move(callback)),
@@ -258,7 +258,7 @@ namespace LzmaSdk
 
         CMyComPtr<IInArchive> _archiveHandler;
         uint64_t _errorCount;
-        std::shared_ptr<LzmaSdk::IExtractCallback> _callback;
+        std::shared_ptr<LzmaSdk::IArchiveExtractCallback> _callback;
 
         FString _directoryPath;  // Output directory
         FString _diskFilePath;   // full path to file on disk

@@ -26,4 +26,6 @@ export extern int g_ForceLZMAImport;
 
 #include "Helpers.h"
 #include "InStreamWrapper.h"
+#include "OutStreamWrapper.h"
+#include "SequentialInStreamWrapper.h"
 #include "SequentialOutStreamWrapper.h"

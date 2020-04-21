@@ -29,4 +29,12 @@ namespace LzmaSdk
         // Returns the size written
         virtual uint32_t Write(const void* data, uint32_t size) = 0;
     };
+
+    export class IOutStream : public ISequentialOutStream
+    {
+    public:
+        // Returns the new position
+        virtual uint64_t Seek(int64_t offset, StreamSeekOrigin origin) = 0;
+        virtual void SetSize(uint64_t size) = 0;
+    };
 }

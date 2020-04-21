@@ -34,7 +34,7 @@ namespace LzmaSdk
 
     void ArchiveReader::ExtractAll(
         const std::string& targetFolder,
-        std::shared_ptr<IExtractCallback> callback)
+        std::shared_ptr<IArchiveExtractCallback> callback)
     {
         // Ensure that the runtime tables are setup
         EnsureCrcInitialized();
@@ -60,7 +60,7 @@ namespace LzmaSdk
             callback,
             archive,
             targetFolderInternal);
-        CMyComPtr<IArchiveExtractCallback> extractCallback(extractCallbackSpec);
+        CMyComPtr<::IArchiveExtractCallback> extractCallback(extractCallbackSpec);
 
         ThrowIfFailed(archive->Extract(
             nullptr,
@@ -72,5 +72,7 @@ namespace LzmaSdk
         {
             throw std::runtime_error("Extract callback has errors");
         }
+
+        callback->OnCompleted();
     }
 }
