@@ -1,6 +1,7 @@
 module;
 
 #include <ctime>
+#include <memory>
 #include <mutex>
 #include <optional>
 #include <string>
@@ -8,9 +9,12 @@ module;
 
 #include "../Common/Common.h"
 #include "../Common/MyInitGuid.h"
-#include "../Windows/NtCheck.h"
 #include "../7zip/Archive/7z/7zHandler.h"
 #include "../../C/7zCrc.h"
+
+#if defined(_WIN32)
+#include "../Windows/NtCheck.h"
+#endif
 
 export module LzmaSdk;
 

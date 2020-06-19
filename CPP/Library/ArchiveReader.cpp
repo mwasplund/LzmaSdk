@@ -10,9 +10,6 @@ module;
 #include "../Common/Common.h"
 #include "../Common/IntToString.h"
 #include "../Common/StringConvert.h"
-#include "../Windows/FileDir.h"
-#include "../Windows/FileFind.h"
-#include "../Windows/FileName.h"
 #include "../Windows/PropVariantConv.h"
 #include "../7zip/Common/FileStreams.h"
 #include "../7zip/Archive/7z/7zHandler.h"
@@ -55,7 +52,6 @@ namespace LzmaSdk
 
         // Extract into the target directory
         FString targetFolderInternal = us2fs(GetUnicodeString(targetFolder.c_str()));
-        NWindows::NFile::NName::NormalizeDirPathPrefix(targetFolderInternal);
         auto extractCallbackSpec = new ArchiveExtractCallbackWrapper(
             callback,
             archive,
