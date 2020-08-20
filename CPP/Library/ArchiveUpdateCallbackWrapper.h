@@ -33,7 +33,7 @@ namespace LzmaSdk
                 throw std::runtime_error("Null callback");
         }
 
-        void Init(const std::vector<std::string>& files)
+        void Init(const std::vector<FileProperties>& files)
         {
             FailedFiles.Clear();
             FailedCodes.Clear();
@@ -42,19 +42,13 @@ namespace LzmaSdk
             for (auto& file : files)
             {
                 DirectoryItem di;
-                FString name = us2fs(GetUnicodeString(file.c_str()));
+                FString name = us2fs(GetUnicodeString(file.Name.c_str()));
 
-                NWindows::NFile::NFind::CFileInfo fi;
-                if (!fi.Find(name))
-                {
-                    throw std::runtime_error("Can't find file" + file);
-                }
-
-                di.Attrib = fi.Attrib;
-                di.Size = fi.Size;
-                di.CTime = fi.CTime;
-                di.ATime = fi.ATime;
-                di.MTime = fi.MTime;
+                di.Attrib = file.Attributes;
+                di.Size = file.Size;
+                di.CTime = ToFileTime(file.CreateTime);
+                di.ATime = ToFileTime(file.AccessTime);
+                di.MTime = ToFileTime(file.ModifiedTime);
                 di.Name = fs2us(name);
                 di.FullPath = name;
                 DirItems.Add(di);
@@ -226,6 +220,16 @@ namespace LzmaSdk
                 *passwordIsDefined = BoolToInt(false);
 
             return StringToBstr(UString(), password);
+        }
+
+    private:
+        FILETIME ToFileTime(std::time_t value)
+        {
+            FILETIME result;
+            LONGLONG ll = Int32x32To64(value, 10000000) + 116444736000000000;
+            result.dwLowDateTime = (DWORD)ll;
+            result.dwHighDateTime = ll >>32;
+            return result;
         }
 
     private:

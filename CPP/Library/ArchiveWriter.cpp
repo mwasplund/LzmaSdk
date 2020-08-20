@@ -41,12 +41,12 @@ namespace LzmaSdk
         g_ForceLZMAImport = 0;
     }
 
-    void ArchiveWriter::AddFile(const std::string& file)
+    void ArchiveWriter::AddFile(FileProperties file)
     {
-        _files.push_back(file);
+        _files.push_back(std::move(file));
     }
 
-    void ArchiveWriter::AddFiles(const std::vector<std::string>& files)
+    void ArchiveWriter::AddFiles(std::vector<FileProperties> files)
     {
         _files.insert(
             _files.end(),
