@@ -3,6 +3,12 @@
 #ifndef __COMMON_COMMON_H
 #define __COMMON_COMMON_H
 
+#ifdef SOUP_BUILD
+// Hack around Static Library fun to force register the LZMA2 Encoder/Decoder
+extern int g_ForceLZMA2Import;
+extern int g_ForceLZMAImport;
+#endif
+
 /*
 This file is included to all cpp files in 7-Zip.
 Each folder contains StdAfx.h file that includes "Common.h".
