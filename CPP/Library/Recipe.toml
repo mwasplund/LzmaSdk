@@ -2,6 +2,7 @@ Name = "LzmaSdk"
 Language = "C++"
 Version = "19.0.0"
 Interface = "Module.cpp"
+EnableWarningsAsErrors = false
 Source = [
 	"ArchiveReader.cpp",
 	"ArchiveWriter.cpp",
